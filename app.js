@@ -13,9 +13,12 @@ const io = socketIO(server)
 io.on('connection', socket => {
     console.log('made socket connection', socket.id);
 
+    socket.emit('connected', socket.id)
+
     // Handle chat event
-    socket.on('chat', function (data) {
-        socket.broadcast.emit('chat', data);
+    socket.on('send message', function (data) {
+        console.log("TCL: send message", data)
+        io.emit('new message', data);
     });
 
     // Handle typing event
@@ -25,5 +28,5 @@ io.on('connection', socket => {
 })
 
 server.listen(4040, () => {
-    console.log('Listening on Port 4000')
+    console.log('Listening on Port 4040')
 })
