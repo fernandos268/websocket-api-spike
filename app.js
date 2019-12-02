@@ -50,8 +50,8 @@ io.on('connection', socket => {
         socket.broadcast.emit('typing', data)
     });
 
+    // RECEIVE FILE FROM CLIENT AND UPLOAD IT IN LOCAL FILE SYSTEM 
     socketIOStream(socket).on('file upload', (stream, data) => {
-        console.log("TCL: data", data)
         const file_name = path.basename(data.file_name)
         const filepath = path.join('./uploads', file_name)
         const ws = fs.createWriteStream(filepath)
@@ -63,18 +63,20 @@ io.on('connection', socket => {
             const progress = Math.floor(size / data.size * 100)
             console.log(Math.floor(size / data.size * 100) + '%');
             socket.emit('upload sucess', { upload_progress: progress })
+            if (progress === 100) {
+                // socketIOStream(socket).emit('get file', stream, { file_name: data.file_name });
+                socket.emit('get file', { upload_progress: progress })
+            }
         })
     })
 
-    socketIOStream(socket).on('get file', (stream, data) => {
-        stream.on('finish', () => {
-            console.log('file has been written');
-        });
-        const dataStream = fs.createWriteStream(data.file_name);
-
-        stream.pipe(dataStream);
-
-        socketIOStream(socket).emit('get file success')
+    // SEND FILE FROM SERVER TO CLIENT
+    socket.on('get file', data => {
+        console.log("TCL: get file -->", data.file_name)
+        // const stream = socketIOStream.createStream()
+        // const file_name = path.basename(data.file_name)
+        // const filepath = path.join('./uploads', file_name)
+        // fs.createReadStream(filepath).pipe(stream)
     })
 
 })
