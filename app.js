@@ -51,10 +51,30 @@ io.on('connection', socket => {
     });
 
     socketIOStream(socket).on('file upload', (stream, data) => {
-        const file_name = path.basename(data.fileName)
+        console.log("TCL: data", data)
+        const file_name = path.basename(data.file_name)
         const filepath = path.join('./uploads', file_name)
         const ws = fs.createWriteStream(filepath)
         stream.pipe(ws)
+
+        let size = 0;
+        stream.on('data', (chunk) => {
+            size += chunk.length;
+            const progress = Math.floor(size / data.size * 100)
+            console.log(Math.floor(size / data.size * 100) + '%');
+            socket.emit('upload sucess', { upload_progress: progress })
+        })
+    })
+
+    socketIOStream(socket).on('get file', (stream, data) => {
+        stream.on('finish', () => {
+            console.log('file has been written');
+        });
+        const dataStream = fs.createWriteStream(data.file_name);
+
+        stream.pipe(dataStream);
+
+        socketIOStream(socket).emit('get file success')
     })
 
 })
