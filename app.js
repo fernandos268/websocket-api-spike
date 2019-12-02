@@ -6,6 +6,7 @@ import cors from 'cors'
 import Busboy from 'busboy'
 import path from 'path'
 import fs from 'fs'
+import socketIOStream from 'socket.io-stream'
 
 const app = express()
 app.use(bodyParser.json())
@@ -16,33 +17,46 @@ const server = http.createServer(app)
 const io = socketIO(server)
 
 app.post('/fileupload', (req, res, next) => {
-    console.log(req.body)
-    res.send(req.body)
-    // const busboy = new Busboy({
-    //     headers: req.headers
-    // })
+    // console.log(req.body)
+    // res.send(req.body)
 
-    // busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-    //     fstream = fs.createWriteStream(__dirname + '/uploads' + filename);
-    //     file.pipe(fstream);
-    // })
+    const busboy = new Busboy({ headers: req.headers })
+    console.log(req.headers);
+    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+
+        const saveTo = path.join(__dirname, 'uploads/' + filename)
+        file.pipe(fs.createWriteStream(saveTo))
+    });
+
+    busboy.on('finish', () => {
+        res.writeHead(200, { 'Connection': 'close' })
+        res.end("Image has been uploaded")
+    });
+
+    return req.pipe(busboy)
 })
 
 io.on('connection', socket => {
-    console.log('made socket connection', socket.id);
+    console.log('made socket connection', socket.id)
 
     socket.emit('connected', socket.id)
 
-    // Handle chat event
     socket.on('send message', data => {
         console.log("TCL: send message", data)
-        io.emit('new message', data);
+        io.emit('new message', data)
     });
 
-    // Handle typing event
     socket.on('typing', data => {
-        socket.broadcast.emit('typing', data);
+        socket.broadcast.emit('typing', data)
     });
+
+    socketIOStream(socket).on('file upload', (stream, data) => {
+        const file_name = path.basename(data.fileName)
+        const filepath = path.join('./uploads', file_name)
+        const ws = fs.createWriteStream(filepath)
+        stream.pipe(ws)
+    })
+
 })
 
 server.listen(4040, () => {
