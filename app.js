@@ -68,13 +68,12 @@ io.on('connection', socket => {
             const outboundStream = socketIOStream.createStream()
             socketIOStream(socket).emit('stream-uploaded-file', outboundStream, {
                 file_name: data.file_name,
-                id: data.fileInfo.uid,
+                file_uid: data.fileInfo.uid,
+                message: data.message,
                 success: true
             })
             fs.createReadStream(filepath).pipe(outboundStream)
         })
-
-
     })
 
     // STREAM FILE FROM SERVER TO CLIENT
