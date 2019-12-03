@@ -42,7 +42,6 @@ io.on('connection', socket => {
     socket.emit('connected', socket.id)
 
     socket.on('send message', data => {
-        console.log("TCL: send message", data)
         io.emit('new message', data)
     });
 
@@ -50,7 +49,7 @@ io.on('connection', socket => {
         socket.broadcast.emit('typing', data)
     });
 
-    // RECEIVE FILE FROM CLIENT AND UPLOAD IT IN LOCAL FILE SYSTEM 
+    // RECEIVE FILE FROM CLIENT AND STORE IT IN LOCAL FILE SYSTEM
     socketIOStream(socket).on('file upload', (stream, data) => {
         const file_name = path.basename(data.file_name)
         const filepath = path.join('./uploads', file_name)
@@ -61,22 +60,46 @@ io.on('connection', socket => {
         stream.on('data', (chunk) => {
             size += chunk.length;
             const progress = Math.floor(size / data.size * 100)
-            console.log(Math.floor(size / data.size * 100) + '%');
-            socket.emit('upload sucess', { upload_progress: progress })
-            if (progress === 100) {
-                // socketIOStream(socket).emit('get file', stream, { file_name: data.file_name });
-                socket.emit('get file', { upload_progress: progress })
-            }
+            socket.emit('upload progress', { progress })
         })
+
+        stream.on('end', () => {
+            console.log('UPLOAD SUCCESS')
+            const outboundStream = socketIOStream.createStream()
+            socketIOStream(socket).emit('stream-uploaded-file', outboundStream, {
+                file_name: data.file_name,
+                id: data.fileInfo.uid,
+                success: true
+            })
+            fs.createReadStream(filepath).pipe(outboundStream)
+        })
+
+
     })
 
-    // SEND FILE FROM SERVER TO CLIENT
-    socket.on('get file', data => {
-        console.log("TCL: get file -->", data.file_name)
-        // const stream = socketIOStream.createStream()
+    // STREAM FILE FROM SERVER TO CLIENT
+    socket.on('client-stream-request', (data) => {
+        console.log("TCL: client-stream-request -->", { data, file_name })
+        // var stream = ss.createStream();
         // const file_name = path.basename(data.file_name)
         // const filepath = path.join('./uploads', file_name)
+        // socketIOStream(socket).emit('client-stream-response', stream, { name: data.file_name });
         // fs.createReadStream(filepath).pipe(stream)
+
+        // let size = 0;
+        // stream.on('data', (chunk) => {
+        //     size += chunk.length;
+        //     const progress = Math.floor(size / data.size * 100)
+        //     console.log(Math.floor(size / data.size * 100) + '%');
+        //     socket.emit('streaming progress', { progress })
+        //     if (progress === 100) {
+        //         socket.emit('streaming sucess', {
+        //             file_name: data.file_name,
+        //             id: data.fileInfo.uid,
+        //             success: true
+        //         })
+        //     }
+        // })
     })
 
 })
