@@ -42,6 +42,7 @@ io.on('connection', socket => {
     socket.emit('connected', socket.id)
 
     socket.on('send message', data => {
+        console.log('SEND MESSAGE', data)
         io.emit('new message', data)
     });
 
@@ -49,7 +50,7 @@ io.on('connection', socket => {
         socket.broadcast.emit('typing', data)
     });
 
-    // RECEIVE FILE FROM CLIENT AND STORE IT IN LOCAL FILE SYSTEM
+    // RECEIVE FILE FROM CLIENT, STORE IT IN DIRECTORY, SEND IT BACK AGAIN TO CLIENT
     socketIOStream(socket).on('file upload', (stream, data) => {
         const file_name = path.basename(data.file_name)
         const filepath = path.join('./uploads', file_name)
@@ -64,41 +65,38 @@ io.on('connection', socket => {
         })
 
         stream.on('end', () => {
-            console.log('UPLOAD SUCCESS')
-            const outboundStream = socketIOStream.createStream()
-            socketIOStream(socket).emit('stream-uploaded-file', outboundStream, {
+            console.log('UPLOAD SUCCESS --> ', data.file_name)
+            // const outboundStream = socketIOStream.createStream()
+            // socketIOStream(socket).emit('stream-uploaded-file', stream, {
+            //     file_name: data.file_name,
+            //     file_uid: data.fileInfo.uid,
+            //     message: data.message,
+            //     files_count: data.files_count
+            // })
+            // fs.createReadStream(filepath).pipe(stream)
+
+
+            io.emit('upload-success', {
                 file_name: data.file_name,
                 file_uid: data.fileInfo.uid,
                 message: data.message,
-                success: true
+                files_count: data.files_count
             })
-            fs.createReadStream(filepath).pipe(outboundStream)
         })
     })
 
     // STREAM FILE FROM SERVER TO CLIENT
-    socket.on('client-stream-request', (data) => {
-        console.log("TCL: client-stream-request -->", { data, file_name })
-        // var stream = ss.createStream();
-        // const file_name = path.basename(data.file_name)
-        // const filepath = path.join('./uploads', file_name)
-        // socketIOStream(socket).emit('client-stream-response', stream, { name: data.file_name });
-        // fs.createReadStream(filepath).pipe(stream)
-
-        // let size = 0;
-        // stream.on('data', (chunk) => {
-        //     size += chunk.length;
-        //     const progress = Math.floor(size / data.size * 100)
-        //     console.log(Math.floor(size / data.size * 100) + '%');
-        //     socket.emit('streaming progress', { progress })
-        //     if (progress === 100) {
-        //         socket.emit('streaming sucess', {
-        //             file_name: data.file_name,
-        //             id: data.fileInfo.uid,
-        //             success: true
-        //         })
-        //     }
-        // })
+    socket.on('request-file', (data) => {
+        console.log('request-file -->', data.file_name)
+        const file_name = path.basename(data.file_name)
+        const filepath = path.join('./uploads', file_name)
+        const outboundStream = socketIOStream.createStream()
+        socketIOStream(socket).emit('stream-uploaded-file', outboundStream, {
+            file_name: data.file_name,
+            file_uid: data.file_uid,
+            message: data.message
+        })
+        fs.createReadStream(filepath).pipe(outboundStream)
     })
 
 })
