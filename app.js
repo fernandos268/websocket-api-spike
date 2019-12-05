@@ -61,21 +61,25 @@ io.on('connection', socket => {
         stream.on('data', (chunk) => {
             size += chunk.length;
             const progress = Math.floor(size / data.size * 100)
-            socket.emit('upload progress', { progress })
+            socket.emit('upload progress', { percent: progress, file_uid: data.fileInfo.uid })
         })
 
         stream.on('end', () => {
             console.log('UPLOAD SUCCESS --> ', data.file_name)
+            // CREATE NEW STREAM AND PIPE TO CLIENT or MULTIPLE CLIENTS
             // const outboundStream = socketIOStream.createStream()
-            // socketIOStream(socket).emit('stream-uploaded-file', stream, {
-            //     file_name: data.file_name,
-            //     file_uid: data.fileInfo.uid,
-            //     message: data.message,
-            //     files_count: data.files_count
+            // socketIOStream(io).emit('stream-uploaded-file', outboundStream, {
+            // file_name: data.file_name,
+            // file_uid: data.fileInfo.uid,
+            // message: data.message,
+            // files_count: data.files_count
             // })
+            // fs.createReadStream(filepath).pipe(outboundStream)
+
+            // PIPE THE STREAM RIGHT AWAY --------------------
             // fs.createReadStream(filepath).pipe(stream)
 
-
+            // NOTIFY THE CLIENT -----------------------
             io.emit('upload-success', {
                 file_name: data.file_name,
                 file_uid: data.fileInfo.uid,
