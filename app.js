@@ -62,7 +62,8 @@ const transport = nodemailer.createTransport({
     let orient_db = await orient_pool.acquire()
 
     const topics = [
-        'chat-messages',
+        'create-messsage-request',
+        'delete-message-request',
         'query-request',
         'request-inbox',
         'request-sent-items'
@@ -70,12 +71,12 @@ const transport = nodemailer.createTransport({
 
 
     // const kafka_pubsub = new KafkaPubSub({
-    //     topic: 'chat-messages',
+    //     topic: 'create-messsage-request',
     //     host: KAFKA_SERVERS,
     // })
 
-    // kafka_pubsub.subscribe('chat-messages', payload => {
-    //     console.log('SUBSCRIBE --> chat-messages', payload)
+    // kafka_pubsub.subscribe('create-messsage-request', payload => {
+    //     console.log('SUBSCRIBE --> create-messsage-request', payload)
 
     // })
 
@@ -106,7 +107,7 @@ const transport = nodemailer.createTransport({
         console.log('consumer --> value --> ', new_message)
 
 
-        if (topic === 'chat-messages') {
+        if (topic === 'create-messsage-request') {
             const result = await orient_db.insert().into('Message').set({
                 ...new_message
             }).one()
@@ -129,7 +130,7 @@ const transport = nodemailer.createTransport({
                 }
 
                 const kafka_message = {
-                    topic: 'new-messages',
+                    topic: 'create-message-response',
                     messages: [JSON.stringify(created_message)]
                 }
 
@@ -143,18 +144,45 @@ const transport = nodemailer.createTransport({
                     html: '<b>Hey there! </b><br> this is sent using nodemailer!'
                 }
 
-                await transport.sendMail(mail_options, (error, info) => {
+                transport.sendMail(mail_options, (error, info) => {
                     if (error) {
                         return console.log(error)
                     }
                     producer.send(payloads, (error, data) => {
                         console.log('send -> db result', data)
                     })
-                });
-
-
+                })
 
             }
+        } else if (topic === 'delete-message-request') {
+            const message = await orient_db
+                .select()
+                .from("Message")
+                .where({ '@rid': new_message.id })
+                .one()
+
+            console.log('topic === delete-message-request', message)
+
+            await orient_db.delete("VERTEX", "Message")
+                .where({ '@rid': new_message.id })
+                .one()
+
+            const deleted_message = {
+                id: `#${Object.values(message['@rid']).join(':')}`,
+                ...message
+            }
+
+            const kafka_message = {
+                topic: 'delete-message-response',
+                messages: [JSON.stringify(deleted_message)]
+            }
+
+            const payloads = [kafka_message]
+
+            return producer.send(payloads, (error, data) => {
+                console.log('send -> delete result', data)
+            })
+
         } else if (
             topic === 'query-request' ||
             topic === 'request-inbox' ||
