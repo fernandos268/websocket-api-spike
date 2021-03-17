@@ -221,7 +221,7 @@ color-name@1.1.3:
   resolved "https://registry.npmjs.org/color-name/-/color-name-1.1.3.tgz"
   integrity sha1-p9BVi9icQveV3UIyj3QIMcpTvCU=
 
-component-bind@1.0.0:
+component-bind@1.0.0, component-bind@~1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/component-bind/-/component-bind-1.0.0.tgz"
   integrity sha1-AMYIq33Nk4l8AAllGx06jh5zu9E=
@@ -285,11 +285,6 @@ cookie@~0.4.1:
   resolved "https://registry.npmjs.org/cookie/-/cookie-0.4.1.tgz"
   integrity sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==
 
-core-util-is@~1.0.0:
-  version "1.0.2"
-  resolved "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz"
-  integrity sha1-tf1UIgqivFq1eqtxQMlAdUUDwac=
-
 cors@^2.8.5:
   version "2.8.5"
   resolved "https://registry.npmjs.org/cors/-/cors-2.8.5.tgz"
@@ -319,13 +314,6 @@ crypto-random-string@^1.0.0:
   resolved "https://registry.npmjs.org/crypto-random-string/-/crypto-random-string-1.0.0.tgz"
   integrity sha1-ojD2T1aDEOFJgAmUB5DsmVRbyn4=
 
-debug@*:
-  version "2.2.0"
-  resolved "https://registry.npmjs.org/debug/-/debug-2.2.0.tgz"
-  integrity sha1-+HBX6ZWxofauaklgZkE3vFbwOdo=
-  dependencies:
-    ms "0.7.1"
-
 debug@2.6.9, debug@^2.2.0:
   version "2.6.9"
   resolved "https://registry.npmjs.org/debug/-/debug-2.6.9.tgz"
@@ -340,6 +328,13 @@ debug@^3.2.6:
   dependencies:
     ms "^2.1.1"
 
+debug@~2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-2.2.0.tgz#f87057e995b1a1f6ae6a4960664137bc56f039da"
+  integrity sha1-+HBX6ZWxofauaklgZkE3vFbwOdo=
+  dependencies:
+    ms "0.7.1"
+
 debug@~3.1.0:
   version "3.1.0"
   resolved "https://registry.npmjs.org/debug/-/debug-3.1.0.tgz"
@@ -353,11 +348,6 @@ debug@~4.1.0:
   integrity sha512-pYAIzeRo8J6KPEaJ0VWOh5Pzkbw/RetuzehGM7QRRX5he4fPHx2rdKMB256ehJCkX+XRQm16eZLqLNS8RSZXZw==
   dependencies:
     ms "^2.1.1"
-
-debuglog@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.npmjs.org/debuglog/-/debuglog-0.0.2.tgz"
-  integrity sha1-bA3PB+LD90UkYpt0Fmi9RsezYus=
 
 deep-extend@^0.6.0:
   version "0.6.0"
@@ -840,7 +830,7 @@ minimist@^1.2.0:
 
 ms@0.7.1:
   version "0.7.1"
-  resolved "https://registry.npmjs.org/ms/-/ms-0.7.1.tgz"
+  resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"
   integrity sha1-nNE8A62/8ltl7/3nzoZO6VIBcJg=
 
 ms@2.0.0:
@@ -1028,15 +1018,6 @@ rc@^1.0.1, rc@^1.1.6:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-readable-stream@1.1.9:
-  version "1.1.9"
-  resolved "https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.9.tgz"
-  integrity sha1-2HEw+/j57pw7QFizxYo+MNsvz90=
-  dependencies:
-    core-util-is "~1.0.0"
-  optionalDependencies:
-    debuglog "0.0.2"
-
 readdirp@~3.3.0:
   version "3.3.0"
   resolved "https://registry.npmjs.org/readdirp/-/readdirp-3.3.0.tgz"
@@ -1187,13 +1168,13 @@ socket.io-parser@~3.4.0:
     debug "~4.1.0"
     isarray "2.0.1"
 
-socket.io-stream@^0.5.3:
-  version "0.5.3"
-  resolved "https://registry.npmjs.org/socket.io-stream/-/socket.io-stream-0.5.3.tgz"
-  integrity sha1-AxV8Wl7rPSbiSc0d7ks3e2yCnLA=
+socket.io-stream@^0.9.1:
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/socket.io-stream/-/socket.io-stream-0.9.1.tgz#421258316288b83ac693b0d43efd09d6d43aba97"
+  integrity sha1-QhJYMWKIuDrGk7DUPv0J1tQ6upc=
   dependencies:
-    debug "*"
-    readable-stream "1.1.9"
+    component-bind "~1.0.0"
+    debug "~2.2.0"
 
 socket.io@^2.3.0:
   version "2.4.1"

@@ -12,47 +12,58 @@ const app = express();
 app.use(bodyParser.json());
 app.use(
   cors({
-    origin: 'http://localhost:5050',
+    origin: 'http://localhost:9002',
   })
 );
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const bucket_name = 'fern';
-const bucketParams = {
-  Bucket: bucket_name,
-};
+const bucket_name = 'Fern-sample-5';
 
 let s3Client = new AWS.S3({
   endpoint: 'http://10.110.80.51:7480/',
   accessKeyId: '8DLDFFVY2E15YBJ9RES9',
   secretAccessKey: 'XHoHwEQlOrfOy45mcfIKNhvrdH4XbbGk02jyvCFr',
-  sslEnabled: true,
-  s3ForcePathStyle: false,
 });
 
 (async () => {
-  // const checkBucket = await s3Client.headBucket(bucketParams).promise();
-  // console.log('%c 🌮 checkBucket: ', 'font-size:20px;background-color: #2EAFB0;color:#fff;', checkBucket);
 
-  // s3Client.createBucket(
-  //     {
-  //       Bucket: 'fernsssssssss',
-  //       CreateBucketConfiguration: {
-  //         LocationConstraint: 'default',
-  //       },
-  //     },
-  //     function (err, data) {
-  //       if (err) {
-  //         console.log('Error', err);
-  //       } else {
-  //         console.log('Success creating bucket', data.Location);
-  //       }
-  //     }
-  //   );
+  try {
+    await s3Client.headBucket({ Bucket: bucket_name}).promise();
+  } catch (err) {
+    console.log('HEAD BUCKET ERROR --> ',err)
+    const createBucketParams = {
+      Bucket: bucket_name,
+      CreateBucketConfiguration: {
+        LocationConstraint: 'default',
+      }
+    }
+    const new_bucket = await s3Client.createBucket(createBucketParams);
+    console.log(']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
+    console.log('%c 🍅 new_bucket: ', 'font-size:20px;background-color: #E41A6A;color:#fff;', new_bucket);
+  }
 
-  // const buckets = await s3Client.listBuckets().promise()
-  // console.log('%c 🍺 buckets: ', 'font-size:20px;background-color: #FCA650;color:#fff;', buckets);
+  const buckets = await s3Client.listBuckets().promise()
+  console.log(']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
+  console.log('%c 🍺 buckets: ', 'font-size:20px;background-color: #FCA650;color:#fff;', buckets);
+
+  console.log(']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
+  // const bucketObjects = await s3Client.listObjects({Bucket: 'Fern'})
+  // console.log('%c 🍢 bucketObjects: ', 'font-size:20px;background-color: #93C0A4;color:#fff;', bucketObjects);
+
+  s3Client.listObjects(
+    {
+      Bucket: bucket_name,
+    },
+    function (err, data) {
+      if (err) {
+        console.log('Error', err);
+      } else {
+        console.log('Success listing objects: ', data);
+      }
+    }
+  );
+  
 
   io.on('connection', (socket) => {
     console.log('made socket connection', socket.id);
@@ -85,16 +96,38 @@ let s3Client = new AWS.S3({
         });
       });
 
-      stream.on('end', () => {
+      stream.on('end', async () => {
         console.log('UPLOAD SUCCESS --> ', data.file_name);
 
-        // NOTIFY THE CLIENT -----------------------
-        io.emit('upload-success', {
-          file_name: data.file_name,
-          file_uid: data.fileInfo.uid,
-          message: data.message,
-          files_count: data.files_count,
-        });
+        const uploadParams = {
+          Bucket: bucket_name,
+          Key: data.file_name,
+          Body: fs.readFileSync(filepath),
+          ACL: 'public-read',
+          Metadata: {
+            'file_name': `${data.file_name}`,
+            'file_uid': `${data.fileInfo.uid}`,
+            'message': `${data.message}`,
+            'files_count': `${data.files_count}`
+          }
+        }
+
+        const uploadedObject = await s3Client.upload(uploadParams).promise()
+        console.log('%c 🍾 uploadedObject: ', 'font-size:20px;background-color: #7F2B82;color:#fff;', uploadedObject);
+
+        if (uploadedObject && uploadedObject.Key) {
+         fs.unlink(filepath, (unlinkError) => {
+          if (!unlinkError) {
+            // NOTIFY THE CLIENT -----------------------
+            socket.emit('upload-success', {
+              file_url: uploadedObject.Location,
+              file_name: uploadedObject.Key,
+              file_uid: uploadedObject.ETag,
+              message: data.message
+            });
+          }
+         })
+        }
       });
     });
 
@@ -113,7 +146,7 @@ let s3Client = new AWS.S3({
     });
   });
 
-  server.listen(4040, () => {
-    console.log('Listening on Port 4040');
+  server.listen(4141, () => {
+    console.log('Listening on Port 4141');
   });
 })();
