@@ -6,7 +6,8 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import socketIOStream from 'socket.io-stream';
-import AWS from 'aws-sdk';
+import S3 from 'aws-sdk/clients/s3'
+import {S3Client} from '@aws-sdk/client-s3'
 
 const app = express();
 app.use(bodyParser.json());
@@ -20,11 +21,13 @@ const io = socketIO(server);
 
 const bucket_name = 'Fern-sample-5';
 
-let s3Client = new AWS.S3({
+let s3Client = new S3({
   endpoint: 'http://10.110.80.51:7480/',
   accessKeyId: '8DLDFFVY2E15YBJ9RES9',
   secretAccessKey: 'XHoHwEQlOrfOy45mcfIKNhvrdH4XbbGk02jyvCFr',
 });
+
+// const client = new S3Client({ region: "REGION" })
 
 (async () => {
 
@@ -131,19 +134,7 @@ let s3Client = new AWS.S3({
       });
     });
 
-    // STREAM FILE FROM SERVER TO CLIENT
-    socket.on('request-file', (data) => {
-      console.log('request-file -->', data.file_name);
-      const file_name = path.basename(data.file_name);
-      const filepath = path.join('./uploads', file_name);
-      const outboundStream = socketIOStream.createStream();
-      socketIOStream(socket).emit('stream-uploaded-file', outboundStream, {
-        file_name: data.file_name,
-        file_uid: data.file_uid,
-        message: data.message,
-      });
-      fs.createReadStream(filepath).pipe(outboundStream);
-    });
+
   });
 
   server.listen(4141, () => {
